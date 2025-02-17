@@ -39,10 +39,8 @@ class GridWorldEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        self.start_pos = self._random_pos()
-        self.goal_pos = self._random_pos()
-        while self.goal_pos == self.start_pos:
-            self.goal_pos = self._random_pos()
+        self.start_pos = (0,0)
+        self.goal_pos = (self.grid_size - 1, self.grid_size - 1)
         self.agent_pos = self.start_pos
 
         if self.render_mode in ["human", "rgb_array"]:
