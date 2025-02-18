@@ -22,29 +22,33 @@ def train_agent(env, total_timesteps=100000, grid_size=10):
     Returns:
         The trained PPO model.
     """
-    
+
     # Create a vectorized environment (optional but often improves performance)
-    # Use make_vec_env only with gymnasium env.
-    #vec_env = make_vec_env(lambda: env, n_envs=4, seed=0)  
     vec_env = make_vec_env(make_env, n_envs=1)  # Or however many parallel envs you want
 
-    # Instantiate the agent with the vectorized environment.
-    model = PPO("MlpPolicy", vec_env, verbose=1)
+    # Specify the logging directory for TensorBoard
+    log_dir = "logs"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
 
-    # Train the agent
-    model.learn(total_timesteps=total_timesteps)
+    # Instantiate the agent with the tensorboard log directory
+    model = PPO("MlpPolicy", vec_env, tensorboard_log=log_dir,verbose=2)
+
+    # Train the agent and write logs
+    model.learn(total_timesteps=total_timesteps, tb_log_name=f"PPO_GridWorld_{grid_size}x{grid_size}")
 
     # Create the directory for saving models if it doesn't exist
     models_dir = "models"
     if not os.path.exists(models_dir):
         os.makedirs(models_dir)
-    
+
     # Save the trained model
     model_path = os.path.join(models_dir, f"PPO_GridWorld_{grid_size}x{grid_size}_{total_timesteps}")
     model.save(model_path)
     print(f"Model saved to {model_path}")
 
     return model
+
 
 def evaluate_trained_agent(model, env, num_episodes=10):
     """
