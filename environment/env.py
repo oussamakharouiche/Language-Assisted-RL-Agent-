@@ -10,12 +10,12 @@ class GridWorldEnv(gym.Env):
         self.grid_size = grid_size
         self.render_mode = render_mode
 
-        # Define the action space : # 0 = Up, 1 = Down, 2 = Left, 3 = Right
-        self.action_space = gym.spaces.Discrete(4)
+        # Define the action space : # 0 = Up, 1 = Down, 2 = Left, 3 = Right, 4 = No-op
+        self.action_space = gym.spaces.Discrete(5)
 
         # Define the observation space
         self.observation_space = gym.spaces.Box(low=0, high=self.grid_size - 1,
-                                                shape=(2,), dtype=np.int32)
+                                                shape=(4,), dtype=np.int32)
 
         self.start_pos = None
         self.goal_pos = None
@@ -35,12 +35,12 @@ class GridWorldEnv(gym.Env):
 
 
     def _get_obs(self):
-        return np.array(self.agent_pos, dtype=np.int32)
+        return np.concatenate((np.array(self.agent_pos), np.array(self.goal_pos)), axis=None)
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        self.start_pos = (0,0)
-        self.goal_pos = (self.grid_size - 1, self.grid_size - 1)
+        self.start_pos = self._random_pos()
+        self.goal_pos = random.choice([(0,0) , (self.grid_size-1, self.grid_size-1), (0, self.grid_size-1), (self.grid_size-1, 0)])
         self.agent_pos = self.start_pos
 
         if self.render_mode in ["human", "rgb_array"]:
@@ -51,6 +51,7 @@ class GridWorldEnv(gym.Env):
         return (self.np_random.integers(0, self.grid_size), self.np_random.integers(0, self.grid_size))
 
     def step(self, action):
+        terminated = False
         row, col = self.agent_pos
         if action == 0:
             row = max(0, row - 1)
@@ -60,17 +61,18 @@ class GridWorldEnv(gym.Env):
             col = max(0, col - 1)
         elif action == 3:
             col = min(self.grid_size - 1, col + 1)
+        elif action == 4:
+            terminated = True
         else:
             raise ValueError("Invalid action")
 
         self.agent_pos = (row, col)
-        terminated = False
         truncated = False
         reward = -1  # Default reward
         info = {}
         if self.agent_pos == self.goal_pos:
             terminated = True
-            reward = 10
+            reward = 60
 
         if self.render_mode in ["human", "rgb_array"]:
             self._render_frame()
