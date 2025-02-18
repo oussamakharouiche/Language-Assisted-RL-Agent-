@@ -3,3 +3,4 @@ gymnasium
 pygame
 dotenv
 google-genai
+transformers

@@ -5,7 +5,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from environment.env import GridWorldEnv   
+from environment.env_with_language import GridWorldEnv   
 
 
 def make_env():
@@ -32,7 +32,9 @@ def train_agent(env, total_timesteps=100000, grid_size=10):
         os.makedirs(log_dir)
 
     # Instantiate the agent with the tensorboard log directory
-    model = PPO("MlpPolicy", vec_env, tensorboard_log=log_dir,verbose=2)
+    # model = PPO("MlpPolicy", vec_env, tensorboard_log=log_dir,verbose=2)
+    model = PPO("MultiInputPolicy", vec_env, tensorboard_log=log_dir,verbose=2)
+    
 
     # Train the agent and write logs
     model.learn(total_timesteps=total_timesteps, tb_log_name=f"PPO_GridWorld_{grid_size}x{grid_size}")
