@@ -24,7 +24,7 @@ def train_agent(env, total_timesteps=100000, grid_size=10):
     """
 
     # Create a vectorized environment (optional but often improves performance)
-    vec_env = make_vec_env(make_env, n_envs=1)  # Or however many parallel envs you want
+    vec_env = make_vec_env(make_env, n_envs=4)  # Or however many parallel envs you want
 
     # Specify the logging directory for TensorBoard
     log_dir = "logs"
@@ -69,12 +69,14 @@ def evaluate_trained_agent(model, env, num_episodes=10):
 
 def main():
     grid_size = 10  # Set the grid size for your environment
-    total_timesteps = 100000
+    total_timesteps = 1000000
     render_mode = "ansi" # "human" or "rgb_array" or "ansi"
     env = GridWorldEnv(grid_size=grid_size, render_mode=render_mode)
 
     #Train the model
     trained_model = train_agent(env,total_timesteps,grid_size)
+
+    trained_model.save("text_guided_2")
 
     # Evaluate trained model
     env = GridWorldEnv(grid_size=grid_size, render_mode=render_mode)
