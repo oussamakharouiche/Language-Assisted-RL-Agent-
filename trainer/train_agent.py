@@ -76,8 +76,6 @@ def main():
     #Train the model
     trained_model = train_agent(env,total_timesteps,grid_size)
 
-    trained_model.save("text_guided_2")
-
     # Evaluate trained model
     env = GridWorldEnv(grid_size=grid_size, render_mode=render_mode)
     evaluate_trained_agent(trained_model,env)
