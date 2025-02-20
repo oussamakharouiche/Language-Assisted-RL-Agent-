@@ -35,7 +35,7 @@ def run_agent(model_path, grid_size=10, num_episodes=10, render_mode='human'):
 
 def main():
     # Specify the path to the saved model
-    model_path = "../models/PPO_GridWorld_10x10_1000000"  # Update this path as needed
+    model_path = "../models/text_guided_2"  # Update this path as needed
     run_agent(model_path)
 
 if __name__ == "__main__":
