@@ -1,21 +1,27 @@
+"""
+this file is for generating prompt for different goal position 
+using gemini; this data is used for training the agent
+"""
+
 from google import genai
 import os
 from dotenv import load_dotenv
 from google.genai import types
 from collections import defaultdict
 import json
-import pandas as pd 
+import pandas as pd
 
 load_dotenv()
-nb_generation = 200
 
+nb_generation = 200
+system_instruction = "reverify yourself to be sure about the answer, and give me just the concise textual instruction, be innovative and use synonyms"
 client = genai.Client(api_key=os.getenv("API_KEY"))
 
 x_data = []
 y_data = []
 prompt_data = []
 
-for (x,y) in [(0,9), (9,0)]:
+for x, y in [(0, 9), (9, 0)]:
 
     prompt = f"""- the G position is (row={x},column={y})
 
@@ -35,10 +41,8 @@ for (x,y) in [(0,9), (9,0)]:
             model="gemini-2.0-flash",
             contents=prompt,
             config=types.GenerateContentConfig(
-                system_instruction="reverify yourself to be sure about the answer, and give me just the concise textual instruction, be innovative and use synonyms",
-                top_k=1000,
-                temperature=2.0
-            )
+                system_instruction=system_instruction, top_k=1000, temperature=2.0
+            ),
         )
         x_data.append(x)
         y_data.append(y)
@@ -63,21 +67,15 @@ for _ in range(nb_generation):
         model="gemini-2.0-flash",
         contents=prompt,
         config=types.GenerateContentConfig(
-            system_instruction="reverify yourself to be sure about the answer, and give me just the concise textual instruction, be innovative and use synonyms",
-            top_k=1000,
-            temperature=2.0
-        )
+            system_instruction=system_instruction, top_k=1000, temperature=2.0
+        ),
     )
     x_data.append(9)
     y_data.append(9)
     prompt_data.append(response.text)
 
-dataset = pd.DataFrame({
-    "row": x_data,
-    "column": y_data,
-    "prompt":prompt_data
-})
+dataset = pd.DataFrame({"row": x_data, "column": y_data, "prompt": prompt_data})
 
-dataset_2 = pd.read_pickle("./dataset/data.pickle")
+past_dataset = pd.read_pickle("./dataset/data.pickle")
 
-pd.concat([dataset, dataset_2], ignore_index=True).to_pickle("./dataset/data.pickle")
+pd.concat([dataset, past_dataset], ignore_index=True).to_pickle("./dataset/data.pickle")
