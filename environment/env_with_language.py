@@ -9,11 +9,11 @@ from transformers import BertTokenizer, BertModel
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "ansi", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, grid_size=10, render_mode="human"):
+    def __init__(self, grid_size=10, render_mode="human", data_path="./dataset/data.pickle"):
         self.grid_size = grid_size
         self.render_mode = render_mode
         self.nb_steps = 0 
-        self.data = pd.read_pickle("./dataset/data.pickle")
+        self.data = pd.read_pickle(data_path)
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         self.model = BertModel.from_pretrained("bert-base-uncased")
         # Define the action space : # 0 = Up, 1 = Down, 2 = Left, 3 = Right, 4 = No-op
@@ -56,7 +56,8 @@ class GridWorldEnv(gym.Env):
         self.text_goal = random.choice(list(self.data[(self.data["row"] == self.goal_pos[0]) & (self.data["column"] == self.goal_pos[1])]["prompt"]))
         with torch.no_grad():
             self.goal_emb = self.model(**self.tokenizer(self.text_goal, return_tensors="pt", padding=True, truncation=True)).last_hidden_state
-            self.goal_emb = torch.mean(self.goal_emb, dim=1)
+            # self.goal_emb = torch.mean(self.goal_emb, dim=1)
+            self.goal_emb = self.goal_emb[:, 0, :] ## cls token 
 
         self.agent_pos = self.start_pos
 
