@@ -10,6 +10,7 @@ from environment.env import GridWorldEnv
 
 def make_env():
     return GridWorldEnv()
+
 def train_agent(env, total_timesteps=100000, grid_size=10):
     """
     Trains a PPO agent on the GridWorld environment.
@@ -23,8 +24,7 @@ def train_agent(env, total_timesteps=100000, grid_size=10):
         The trained PPO model.
     """
 
-    # Create a vectorized environment (optional but often improves performance)
-    vec_env = make_vec_env(make_env, n_envs=1)  # Or however many parallel envs you want
+    vec_env = make_vec_env(make_env, n_envs=1)
 
     # Specify the logging directory for TensorBoard
     log_dir = "logs"
@@ -77,13 +77,6 @@ def main():
     # Evaluate trained model
     env = GridWorldEnv(grid_size=grid_size, render_mode=render_mode)
     evaluate_trained_agent(trained_model,env)
-
-
-    #---- Optional:  Demonstrate the trained agent (requires human render mode)-----#
-    # Load model
-    # models_dir = "models"
-    # model_path = os.path.join(models_dir, f"PPO_GridWorld_{grid_size}x{grid_size}_{total_timesteps}")
-    # trained_model = PPO.load(model_path, env=env)
 
     # Reset and get observation.
     obs, info = env.reset()  # Use the new reset signature
