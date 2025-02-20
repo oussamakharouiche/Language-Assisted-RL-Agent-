@@ -9,7 +9,7 @@ from transformers import BertTokenizer, BertModel
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "ansi", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, grid_size=10, render_mode="human", data_path="./dataset/data.pickle"):
+    def __init__(self, grid_size=10, render_mode="human", data_path="../dataset/data.pickle"):
         self.grid_size = grid_size
         self.render_mode = render_mode
         self.nb_steps = 0 
@@ -70,6 +70,7 @@ class GridWorldEnv(gym.Env):
         return (self.np_random.integers(0, self.grid_size), self.np_random.integers(0, self.grid_size))
 
     def step(self, action):
+        self._agent_color = (0, 0, 255)
         self.nb_steps += 1
         terminated = False
         reward = -1
@@ -83,6 +84,7 @@ class GridWorldEnv(gym.Env):
         elif action == 3:
             col = min(self.grid_size - 1, col + 1)
         elif action == 4:
+            self._agent_color = (255,255,0) #Yellow
             if self.agent_pos == self.goal_pos :
                 reward = 60 
                 terminated = True 
