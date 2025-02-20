@@ -133,17 +133,16 @@ class GridWorldEnv(gym.Env):
         )
 
     def step(self, action):
-<<<<<<< HEAD
         """
         Execute one time step within the environment based on the given action.
-
-        Updates the agent's position according to the action, computes the reward, and
+        
+        Updates the agent's position according to the action, computes the reward, and 
         determines whether the episode has terminated or been truncated.
-
+        
         Args:
             action (int): An integer representing the action to take.
                           0 = Up, 1 = Down, 2 = Left, 3 = Right, 4 = No-op.
-
+        
         Returns:
             tuple: A tuple containing:
                 - observation (numpy.ndarray): The new state of the environment.
@@ -152,9 +151,6 @@ class GridWorldEnv(gym.Env):
                 - truncated (bool): Flag indicating whether the episode has been truncated (e.g., due to a step limit).
                 - info (dict): Additional information (empty in this implementation).
         """
-        # Reset agent color to blue for movement actions
-=======
->>>>>>> d93ec9c6324ab82bcd4415802cccd1ae8394ce2e
         self._agent_color = (0, 0, 255)
         self.nb_steps += 1
         terminated = False
@@ -169,19 +165,11 @@ class GridWorldEnv(gym.Env):
             col = max(0, col - 1)
         elif action == 3:  # Move right
             col = min(self.grid_size - 1, col + 1)
-<<<<<<< HEAD
         elif action == 4:  # No-op action
             self._agent_color = (255, 255, 0)  # Change color to yellow for no-op
             if self.agent_pos == self.goal_pos:
                 reward = 60  # Reward for reaching the goal and performing no-op
                 terminated = True
-=======
-        elif action == 4:
-            self._agent_color = (255,255,0) #Yellow
-            if self.agent_pos == self.goal_pos :
-                reward = 60 
-                terminated = True 
->>>>>>> d93ec9c6324ab82bcd4415802cccd1ae8394ce2e
 
         else:
             raise ValueError("Invalid action")
