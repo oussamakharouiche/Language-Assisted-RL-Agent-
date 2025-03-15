@@ -7,6 +7,31 @@ import torch
 from transformers import BertTokenizer, BertModel
 
 class GridWorldEnv(gym.Env):
+    """
+    A Grid World Environment with BERT-based goal embeddings.
+
+    The environment simulates an agent navigating a grid. The goal cell is associated with a text
+    prompt, whose embedding is computed using a pre-trained BERT model. The agent can move in four
+    cardinal directions or perform a no-op action to check for goal achievement.
+
+    Action Space:
+        0: Up
+        1: Down
+        2: Left
+        3: Right
+        4: No-op (check for goal)
+
+    Observation Space:
+        {
+            "grid_coordinates": Agent's (row, column) position.
+            "bert_embeddings": BERT embedding of the goal text.
+        }
+
+    Rendering Modes:
+        - human: Uses pygame to render the grid.
+        - rgb_array: Returns the rendered frame as an RGB numpy array.
+        - ansi: Provides a text-based grid representation.
+    """
     metadata = {"render_modes": ["human", "ansi", "rgb_array"], "render_fps": 30}
 
     def __init__(self, grid_size=10, render_mode="human", data_path="../dataset/data.pickle"):
