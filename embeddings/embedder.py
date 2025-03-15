@@ -12,7 +12,17 @@ import evaluate
 
 # Function to assign a unique class to each position in a grid
 def position_to_class(row, col, position_to_class_map):
-    """Assigns a unique class to each position in a grid."""
+    """
+    Assigns a unique class to each position in a grid.
+    
+    Args:
+        row (int): The row position in the grid.
+        col (int): The column position in the grid.
+        position_to_class_map (dict): Dictionary mapping (row, col) tuples to class indices.
+        
+    Returns:
+        int: The class index for the given position.
+    """
     # If the position hasn't been assigned a class yet, assign a new class
     if (row, col) not in position_to_class_map:
         position_to_class_map[(row, col)] = len(position_to_class_map)
@@ -20,15 +30,49 @@ def position_to_class(row, col, position_to_class_map):
 
 # Function to preprocess text
 def preprocess_text(text):
+    """
+    Preprocesses text by removing leading and trailing whitespace.
+    
+    Args:
+        text (str): The input text to preprocess.
+        
+    Returns:
+        str: The preprocessed text.
+    """
     return text.strip()
 
 # Function to tokenize texts using a BERT tokenizer
 def tokenize_function(texts, tokenizer):
+    """
+    Tokenizes a batch of texts using a BERT tokenizer.
+    
+    Args:
+        texts (list): A list of text strings to tokenize.
+        tokenizer (BertTokenizer): The BERT tokenizer.
+        
+    Returns:
+        dict: A dictionary containing tokenized inputs (input_ids, attention_mask, etc.).
+    """
     return tokenizer(texts, padding="max_length", truncation=True, max_length=128)
 
 
 # Function to train a BERT model for text classification
 def train():
+    """
+    Trains a BERT model for text classification.
+    
+    This function:
+    1. Loads and preprocesses the dataset
+    2. Maps grid positions to class labels
+    3. Splits data into train, validation, and test sets
+    4. Tokenizes the text data
+    5. Trains a BERT classifier
+    6. Evaluates the model on the test set
+    7. Saves the trained model and tokenizer
+    
+    Returns:
+        None
+    """
     # Loading the dataset
     data = pd.read_pickle("dataset\data.pickle")
     data_test = pd.read_pickle("dataset\data_test.pickle")
@@ -122,6 +166,19 @@ def train():
     
 # Function to embed text using the trained model
 def embed_text(texts, device='cuda'):
+    """
+    Embeds text using a trained BERT classification model.
+    
+    This function checks if a trained model exists, trains one if it doesn't,
+    and then uses the model to generate embeddings for the input texts.
+    
+    Args:
+        texts (list or str): A single text string or list of text strings to embed.
+        device (str): The device to run the model on ('cuda' or 'cpu').
+        
+    Returns:
+        torch.Tensor: The embeddings of the input texts, with shape [batch_size, embedding_dim].
+    """
     
     # Load the model and tokenizer
     model_path = "./saved_model"
@@ -149,9 +206,4 @@ def embed_text(texts, device='cuda'):
         # Get the embeddings from the last layer (CLS token)
         embeddings = outputs.hidden_states[-1][:, 0, :]  
     
-    return embeddings    
-
-    
-
-        
-    
+    return embeddings
