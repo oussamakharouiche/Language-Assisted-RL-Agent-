@@ -6,7 +6,7 @@ import random
 import torch
 from transformers import BertTokenizer, BertModel
 
-class GridWorldEnv(gym.Env):
+class LanguageGridWorldEnv(gym.Env):
     """
     A Grid World Environment with BERT-based goal embeddings.
 
@@ -34,20 +34,19 @@ class GridWorldEnv(gym.Env):
     """
     metadata = {"render_modes": ["human", "ansi", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, grid_size=10, render_mode="human", data_path="../dataset/data.pickle"):
+    def __init__(self, embedder, embedding_dim, grid_size=10, render_mode="human", data_path="../dataset/data.pickle"):
         self.grid_size = grid_size
         self.render_mode = render_mode
         self.nb_steps = 0 
         self.data = pd.read_pickle(data_path)
-        self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        self.model = BertModel.from_pretrained("bert-base-uncased")
+        self.embedder = embedder
         # Define the action space : # 0 = Up, 1 = Down, 2 = Left, 3 = Right, 4 = No-op
         self.action_space = gym.spaces.Discrete(5)
 
         # Define the observation space
         self.observation_space = gym.spaces.Dict({
             "grid_coordinates": gym.spaces.Box(low=0, high=grid_size - 1, shape=(2,), dtype=np.int32),
-            "bert_embeddings": gym.spaces.Box(low=-1.0, high=1.0, shape=(768,), dtype=np.float32),
+            "bert_embeddings": gym.spaces.Box(low=-1.0, high=1.0, shape=(embedding_dim,), dtype=np.float32),
         })
 
         self.start_pos = None
@@ -70,7 +69,7 @@ class GridWorldEnv(gym.Env):
     def _get_obs(self):
         return {
         "grid_coordinates": self.agent_pos,
-        "bert_embeddings": np.array(self.goal_emb),
+        "bert_embeddings": self.goal_emb.cpu().numpy(),
     }
 
     def reset(self, seed=None, options=None):
@@ -79,10 +78,7 @@ class GridWorldEnv(gym.Env):
         self.start_pos = self._random_pos()
         self.goal_pos = random.choice([(self.grid_size-1, self.grid_size-1), (0, self.grid_size-1), (self.grid_size-1, 0)])
         self.text_goal = random.choice(list(self.data[(self.data["row"] == self.goal_pos[0]) & (self.data["column"] == self.goal_pos[1])]["prompt"]))
-        with torch.no_grad():
-            self.goal_emb = self.model(**self.tokenizer(self.text_goal, return_tensors="pt", padding=True, truncation=True)).last_hidden_state
-            # self.goal_emb = torch.mean(self.goal_emb, dim=1)
-            self.goal_emb = self.goal_emb[:, 0, :] ## cls token 
+        self.goal_emb = self.embedder(self.text_goal)
 
         self.agent_pos = self.start_pos
 

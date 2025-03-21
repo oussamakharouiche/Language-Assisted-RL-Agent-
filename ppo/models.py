@@ -108,3 +108,73 @@ class SplitModel(nn.Module):
             path (str): The path where the state dictionary should be saved.
         """
         torch.save(self.state_dict(), path)
+
+class MultiInputSplitModel(nn.Module):
+    def __init__(self, obs_space_shapes: dict, action_space_shape: int):
+        super(MultiInputSplitModel, self).__init__()
+
+        self.bert_embedding_actor = nn.Sequential(
+            layer_init(nn.Linear(obs_space_shapes["bert_embeddings"], 256)),
+            nn.Tanh(),
+            layer_init(nn.Linear(256, 64)),
+            nn.Tanh()
+        )
+        self.actor = nn.Sequential(
+            layer_init(nn.Linear(64+obs_space_shapes["grid_coordinates"], 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64,action_space_shape), std=0.01)
+        )
+
+        self.bert_embedding_critic = nn.Sequential(
+            layer_init(nn.Linear(obs_space_shapes["bert_embeddings"], 256)),
+            nn.Tanh(),
+            layer_init(nn.Linear(256, 64)),
+            nn.Tanh()
+        )
+
+        self.critic = nn.Sequential(
+            layer_init(nn.Linear(64+obs_space_shapes["grid_coordinates"], 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64, 64)),
+            nn.Tanh(),
+            layer_init(nn.Linear(64,1), std=1.0)
+        )
+
+    def forward(self, obs):
+        """
+        Forward pass for the split model.
+
+        Args:
+            obs (torch.Tensor): The input observation tensor.
+
+        Returns:
+            Tuple[Categorical, torch.Tensor]: The action distribution and value estimation.
+        """
+        pi = Categorical(logits=self.actor(torch.cat([self.bert_embedding_actor(obs["bert_embeddings"]), obs["grid_coordinates"]], dim=1)))
+        value = self.critic(torch.cat([self.bert_embedding_critic(obs["bert_embeddings"]), obs["grid_coordinates"]], dim=1))
+
+        return pi, value
+
+
+    def save(self, path: str) -> None:
+        """
+        Save the model state dictionary to a file.
+
+        Args:
+            path (str): The path where the state dictionary should be saved.
+        """
+        torch.save(self.state_dict(), path)
+
+
+
+models = {
+    "MlpPolicy": {
+        "Shared": SharedModel,
+        "Split": SplitModel,
+    },
+    "MultiInputPolicy": {
+        "Split": MultiInputSplitModel,
+    }
+}
