@@ -1,17 +1,12 @@
-import argparse
-from distutils.util import strtobool
-import os
-
-import gymnasium as gym
-from gymnasium.wrappers import RecordVideo
+import time
 import numpy as np
 import torch
 from stable_baselines3.common.env_util import make_vec_env
 from torch import optim
 from torch.utils.tensorboard import SummaryWriter
 
-from .models import SharedModel, SplitModel, models
-from .utils import normalize, load_config
+from .models import models
+from .utils import normalize
     
 class Trainer:
     """
@@ -109,7 +104,8 @@ class Trainer:
 
         for t in range(self.num_steps):
             if self.policy == "MultiInputPolicy":
-                self.obs = self.to_tensor_dict(self.obs)
+                for key in self.obs:
+                    observations[key][:,t] = self.obs[key]
             else:
                 observations[:,t] = self.obs
             
@@ -121,8 +117,7 @@ class Trainer:
 
             self.obs, reward, done, info =  self.env.step(action.cpu().numpy())
             if self.policy == "MultiInputPolicy":
-                for key in self.obs_space_shape:
-                    self.obs[key] = self.to_tensor(self.obs[key]).to(self.device)
+                self.obs = self.to_tensor_dict(self.obs)
             else:
                 self.obs = self.to_tensor(self.obs).to(self.device)
             dones[:,t] = self.to_tensor(done)
@@ -301,14 +296,21 @@ class Trainer:
             if self.anneal_lr:
                 coeff = 1 - (e/self.update)
                 self.optimizer.param_groups[0]["lr"] = coeff * self.lr
+
+            start_sample = time.time()
             samples = self.sample()
+            sample_time = time.time() - start_sample
+            self.writer.add_scalar("time/sample_total", sample_time, e)
             self.writer.add_scalar(
                 "mean_reward",
                 samples["rewards"].mean(), 
                 global_step = self.reward_step
             )
             self.reward_step += 1
+            start_train = time.time()
             self.train(samples)
+            train_time = time.time() - start_train
+            self.writer.add_scalar("time/train_total", train_time, e)
 
     @torch.no_grad()
     def test_policy(self,make_env, n_eval_episodes: int = 10) -> tuple:
