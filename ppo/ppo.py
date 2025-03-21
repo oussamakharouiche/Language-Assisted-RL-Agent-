@@ -116,10 +116,13 @@ class Trainer:
             log_probs[:,t] = action_distribution.log_prob(action).detach() ### check the format
 
             self.obs, reward, done, info =  self.env.step(action.cpu().numpy())
+            start_convert = time.time()
             if self.policy == "MultiInputPolicy":
                 self.obs = self.to_tensor_dict(self.obs)
             else:
                 self.obs = self.to_tensor(self.obs).to(self.device)
+            convert_time = time.time() - start_convert
+            self.writer.add_scalar("time/data_conversion", convert_time, self.global_step)
             dones[:,t] = self.to_tensor(done)
             rewards[:,t] = self.to_tensor(reward)
 
