@@ -16,6 +16,9 @@ def make_env():
 def make_language_env(data_path="./dataset/data.pickle"):
     return LanguageGridWorldEnv(embed_text, EMBED_TEXT_DIM, data_path=data_path)
 
+def make_language_seq_env(data_path="./dataset/data.pickle"):
+    return LanguageGridWorldEnv(embed_text_seq_classification, EMBED_TEXT_SEQ_CLASSIFICATION_DIM, data_path=data_path)
+
 def train_agent(make_env, params):
     """
     Trains a PPO agent on the GridWorld environment.
@@ -59,7 +62,7 @@ def main():
 
     params = load_config(args.config_path)
 
-    train_agent(make_env if params["type"] == "simple" else make_language_env, params)
+    train_agent(make_env if params["type"] == "simple" else make_language_env if params["embedding_type"] == "simplebert" else make_language_seq_env, params)
 
 
 if __name__ == "__main__":

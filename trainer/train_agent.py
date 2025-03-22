@@ -5,11 +5,13 @@ from stable_baselines3.common.evaluation import evaluate_policy
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from environment.env_with_language import GridWorldEnv   
+from environment import GridWorldEnv, LanguageGridWorldEnv
+from embeddings import *
+
 
 
 def make_env():
-    return GridWorldEnv()
+    return LanguageGridWorldEnv(embed_text, EMBED_TEXT_DIM)
 
 def train_agent(env, total_timesteps=100000, grid_size=10):
     """
@@ -24,7 +26,7 @@ def train_agent(env, total_timesteps=100000, grid_size=10):
         The trained PPO model.
     """
 
-    vec_env = make_vec_env(make_env, n_envs=1)
+    vec_env = make_vec_env(make_env, n_envs=16)
 
     # Specify the logging directory for TensorBoard
     log_dir = "logs"
