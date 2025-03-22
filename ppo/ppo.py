@@ -1,5 +1,7 @@
 import time
 import numpy as np
+from tqdm import tqdm
+import os
 import torch
 from stable_baselines3.common.env_util import make_vec_env
 from torch import optim
@@ -59,6 +61,7 @@ class Trainer:
         self.global_step = 0
         self.anneal_lr = params["anneal_lr"]
         self.lr = params["learning_rate"]
+        self.model_name = params["model_name"]
 
     def to_tensor(self,arr: np.ndarray) -> torch.Tensor:
         """
@@ -102,6 +105,8 @@ class Trainer:
         values = torch.zeros((self.n_envs, self.num_steps+1), dtype=torch.float)
         log_probs = torch.zeros((self.n_envs, self.num_steps), dtype=torch.float)
 
+        env_interaction_time = 0.0
+        convert_time = 0.0
         for t in range(self.num_steps):
             if self.policy == "MultiInputPolicy":
                 for key in self.obs:
@@ -115,14 +120,15 @@ class Trainer:
             values[:,t] = v.reshape(self.n_envs,).detach()
             log_probs[:,t] = action_distribution.log_prob(action).detach() ### check the format
 
+            start_step = time.time()
             self.obs, reward, done, info =  self.env.step(action.cpu().numpy())
+            env_interaction_time += time.time() - start_step
             start_convert = time.time()
             if self.policy == "MultiInputPolicy":
                 self.obs = self.to_tensor_dict(self.obs)
             else:
                 self.obs = self.to_tensor(self.obs).to(self.device)
-            convert_time = time.time() - start_convert
-            self.writer.add_scalar("time/data_conversion", convert_time, self.global_step)
+            convert_time += time.time() - start_convert
             dones[:,t] = self.to_tensor(done)
             rewards[:,t] = self.to_tensor(reward)
 
@@ -134,6 +140,8 @@ class Trainer:
 
             self.global_step+=1
 
+        self.writer.add_scalar("time/data_conversion", convert_time/self.num_steps, self.reward_step)
+        self.writer.add_scalar("time/env_interaction", env_interaction_time/self.num_steps, self.reward_step)
         # Get value for the final observation
         _, v = self.model(self.obs)
         values[:,self.num_steps] = v.reshape(self.n_envs)
@@ -294,8 +302,7 @@ class Trainer:
         """
         Main training loop.
         """
-        for e in range(self.update):
-            print(f"{e+1}/{self.update}")
+        for e in tqdm(range(self.update)):
             if self.anneal_lr:
                 coeff = 1 - (e/self.update)
                 self.optimizer.param_groups[0]["lr"] = coeff * self.lr
@@ -303,17 +310,25 @@ class Trainer:
             start_sample = time.time()
             samples = self.sample()
             sample_time = time.time() - start_sample
-            self.writer.add_scalar("time/sample_total", sample_time, e)
+            self.writer.add_scalar("time/sample_total", sample_time/self.num_steps, self.reward_step)
             self.writer.add_scalar(
                 "mean_reward",
                 samples["rewards"].mean(), 
                 global_step = self.reward_step
             )
-            self.reward_step += 1
             start_train = time.time()
             self.train(samples)
             train_time = time.time() - start_train
-            self.writer.add_scalar("time/train_total", train_time, e)
+            self.writer.add_scalar("time/train_total", train_time, self.reward_step)
+            self.reward_step += 1
+
+            if e % 50 == 0:
+                models_dir = "models"
+                if not os.path.exists(models_dir):
+                    os.makedirs(models_dir)
+
+                model_path = os.path.join(models_dir, self.model_name)
+                self.model.save(model_path)
 
     @torch.no_grad()
     def test_policy(self,make_env, n_eval_episodes: int = 10) -> tuple:
