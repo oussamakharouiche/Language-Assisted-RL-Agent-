@@ -3,8 +3,6 @@ import pandas as pd
 import gymnasium as gym
 import pygame
 import random
-import torch
-from transformers import BertTokenizer, BertModel
 
 class LanguageGridWorldEnv(gym.Env):
     """
@@ -34,7 +32,7 @@ class LanguageGridWorldEnv(gym.Env):
     """
     metadata = {"render_modes": ["human", "ansi", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, embedder, embedding_dim, grid_size=10, render_mode="human", data_path="../dataset/data.pickle"):
+    def __init__(self, embedder, embedding_dim, grid_size=10, render_mode="human", data_path="./dataset/data.pickle"):
         self.grid_size = grid_size
         self.render_mode = render_mode
         self.nb_steps = 0 
@@ -69,7 +67,7 @@ class LanguageGridWorldEnv(gym.Env):
     def _get_obs(self):
         return {
         "grid_coordinates": self.agent_pos,
-        "bert_embeddings": self.goal_emb.cpu().numpy(),
+        "bert_embeddings": self.goal_emb,
     }
 
     def reset(self, seed=None, options=None):
@@ -78,7 +76,7 @@ class LanguageGridWorldEnv(gym.Env):
         self.start_pos = self._random_pos()
         self.goal_pos = random.choice([(self.grid_size-1, self.grid_size-1), (0, self.grid_size-1), (self.grid_size-1, 0)])
         self.text_goal = random.choice(list(self.data[(self.data["row"] == self.goal_pos[0]) & (self.data["column"] == self.goal_pos[1])]["prompt"]))
-        self.goal_emb = self.embedder(self.text_goal)
+        self.goal_emb = self.embedder(self.text_goal).cpu().numpy()
 
         self.agent_pos = self.start_pos
 
@@ -109,7 +107,6 @@ class LanguageGridWorldEnv(gym.Env):
             if self.agent_pos == self.goal_pos :
                 reward = 60 
                 terminated = True 
-
         else:
             raise ValueError("Invalid action")
 
