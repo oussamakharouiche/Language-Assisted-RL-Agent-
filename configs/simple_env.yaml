@@ -1,7 +1,7 @@
-exp_name: "my_PPO_GridWorld_10x10_newest"
+exp_name: "runtime_test"
 model_name: "my_PPO_GridWorld_10x10"
 type: "simple"
-embedding_size: "None"
+embedding_type: "None"
 share: false
 seed: 40
 cuda: true

@@ -1,7 +1,7 @@
-exp_name: "my_PPO_LanguageGridWorld_10x10_1"
-model_name: "my_PPO_LanguageGridWorld_10x10_simple_bert"
+exp_name: "my_PPO_SeqLanguageGridWorld_10x10_test"
+model_name: "my_PPO_LanguageGridWorld_10x10_seq_classif_bert"
 type: "language"
-embedding_type: "simple_bert"
+embedding_type: "seq_classif_bert"
 share: false
 seed: 40
 cuda: true
