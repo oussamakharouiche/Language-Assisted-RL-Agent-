@@ -161,8 +161,8 @@ def train():
     trainer.evaluate(dataset["test"])
     
     # Save the model and tokenizer
-    model.save_pretrained("./saved_model")
-    tokenizer.save_pretrained("./saved_model")
+    model.save_pretrained("./models/embedder/seq_classification")
+    tokenizer.save_pretrained("./models/embedder/seq_classification")
     
     
 # Function to embed text using the trained model
@@ -182,7 +182,7 @@ def embed_text_seq_classification(texts, device='cuda'):
     """
     
     # Load the model and tokenizer
-    model_path = "./saved_model"
+    model_path = "./models/embedder/seq_classification"
     
     # Check if the model exists, else train the model
     if not os.path.exists(model_path):
