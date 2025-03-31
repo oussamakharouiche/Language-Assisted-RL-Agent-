@@ -74,9 +74,9 @@ class LanguageGridWorldEnv(gym.Env):
         super().reset(seed=seed)
         self.nb_steps = 0
         self.start_pos = self._random_pos()
-        self.goal_pos = random.choice([(self.grid_size-1, self.grid_size-1), (0, self.grid_size-1), (self.grid_size-1, 0)])
+        self.goal_pos = random.choice([(self.grid_size-1, self.grid_size-1), (0, self.grid_size-1), (self.grid_size-1, 0), (0,0)])
         self.text_goal = random.choice(list(self.data[(self.data["row"] == self.goal_pos[0]) & (self.data["column"] == self.goal_pos[1])]["prompt"]))
-        self.goal_emb = self.embedder(self.text_goal).cpu().numpy()
+        self.goal_emb = np.squeeze(self.embedder(self.text_goal).cpu().numpy())
 
         self.agent_pos = self.start_pos
 

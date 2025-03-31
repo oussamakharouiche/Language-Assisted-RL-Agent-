@@ -1,5 +1,5 @@
 """
-this file is for generating prompt for different goal position 
+this file is for generating prompt for different goal position
 using gemini; this data is used for training the agent
 """
 
@@ -7,8 +7,6 @@ from google import genai
 import os
 from dotenv import load_dotenv
 from google.genai import types
-from collections import defaultdict
-import json
 import pandas as pd
 
 load_dotenv()
@@ -21,7 +19,7 @@ x_data = []
 y_data = []
 prompt_data = []
 
-for x, y in [(0, 9), (9, 0)]:
+for x, y in [(0, 9), (9, 0), (0,0)]:
 
     prompt = f"""- the G position is (row={x},column={y})
 
@@ -49,7 +47,7 @@ for x, y in [(0, 9), (9, 0)]:
         prompt_data.append(response.text)
 
 
-prompt = f"""- the G position is (row=9,column=9)
+prompt = """- the G position is (row=9,column=9)
 
     Your task is to generate a clear, concise textual instruction that guides an agent to a specific target location on a grid. 
     The grid is 10x10, with both columns and rows numbered starting from 0.
@@ -76,6 +74,6 @@ for _ in range(nb_generation):
 
 dataset = pd.DataFrame({"row": x_data, "column": y_data, "prompt": prompt_data})
 
-past_dataset = pd.read_pickle("./dataset/data.pickle")
+past_dataset = pd.read_pickle("./dataset/new_corner.pickle")
 
-pd.concat([dataset, past_dataset], ignore_index=True).to_pickle("./dataset/data.pickle")
+pd.concat([dataset, past_dataset], ignore_index=True).to_pickle("./dataset/new_corner.pickle")

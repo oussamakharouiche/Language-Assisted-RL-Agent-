@@ -32,11 +32,13 @@ class Trainer:
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
 
+        self.exception =  ["MultiInputPolicy", "MultiInputAttentionPolicy", "MultiInputMultiHeadAttentionPolicy"]
+
         self.num_steps = params["num_steps"]
         self.policy =  params["policy"]
         self.n_envs = params["n_envs"]
         self.env = make_vec_env(make_env, n_envs=self.n_envs, seed=self.seed)
-        self.obs_space_shape = {key:self.env.observation_space[key].shape[0] for key in self.env.observation_space} if self.policy == "MultiInputPolicy" else self.env.observation_space.shape[0]
+        self.obs_space_shape = {key:self.env.observation_space[key].shape for key in self.env.observation_space} if self.policy in self.exception else self.env.observation_space.shape
         self.model = models[self.policy]["Shared" if params["share"] else "Split"](self.obs_space_shape, self.env.action_space.n)
         # self.model = SharedModel(self.env.observation_space.shape[0], self.env.action_space.n) if params["share"] else SplitModel(self.env.observation_space.shape[0], self.env.action_space.n)
         self.batch_size = self.num_steps*self.n_envs
@@ -49,7 +51,7 @@ class Trainer:
         self.n_epochs = params["n_epochs"]
         self.device = torch.device("cuda" if torch.cuda.is_available() and params["cuda"] else "cpu")
         self.model.to(self.device)
-        if self.policy == "MultiInputPolicy":
+        if self.policy in self.exception:
             self.obs = self.to_tensor_dict(self.env.reset())
         else:
             self.obs = self.to_tensor(self.env.reset()).to(self.device)
@@ -75,7 +77,7 @@ class Trainer:
         """
         return torch.tensor(arr, dtype=torch.float)
     
-    def to_tensor_dict(self, data: dict) -> dict:
+    def to_tensor_dict(self, data: dict, test: bool = False) -> dict:
         """
         Convert a dictionary of array-like objects to a dictionary of PyTorch tensors.
         This function minimizes the overhead by doing the conversion in one go.
@@ -86,6 +88,9 @@ class Trainer:
         Returns:
             dict: Dictionary of converted tensors on the proper device.
         """
+        if test:
+            return {key: torch.tensor(value, dtype=torch.float, device=self.device).unsqueeze(0)
+                for key, value in data.items()}
         return {key: torch.tensor(value, dtype=torch.float, device=self.device)
                 for key, value in data.items()}
         
@@ -101,14 +106,14 @@ class Trainer:
         rewards = torch.zeros((self.n_envs, self.num_steps), dtype=torch.float)
         actions = torch.zeros((self.n_envs, self.num_steps), dtype=torch.long)
         dones = torch.zeros((self.n_envs, self.num_steps), dtype=torch.float)
-        observations = {key:torch.zeros((self.n_envs, self.num_steps, value), dtype=torch.float) for key, value in self.obs_space_shape.items()} if self.policy == "MultiInputPolicy" else torch.zeros((self.n_envs, self.num_steps, self.env.observation_space.shape[0]), dtype=torch.float)
+        observations = {key:torch.zeros((self.n_envs, self.num_steps, *value), dtype=torch.float) for key, value in self.obs_space_shape.items()} if self.policy in self.exception else torch.zeros((self.n_envs, self.num_steps, *self.obs_space_shape), dtype=torch.float)
         values = torch.zeros((self.n_envs, self.num_steps+1), dtype=torch.float)
         log_probs = torch.zeros((self.n_envs, self.num_steps), dtype=torch.float)
 
         env_interaction_time = 0.0
         convert_time = 0.0
         for t in range(self.num_steps):
-            if self.policy == "MultiInputPolicy":
+            if self.policy in self.exception:
                 for key in self.obs:
                     observations[key][:,t] = self.obs[key]
             else:
@@ -124,7 +129,7 @@ class Trainer:
             self.obs, reward, done, info =  self.env.step(action.cpu().numpy())
             env_interaction_time += time.time() - start_step
             start_convert = time.time()
-            if self.policy == "MultiInputPolicy":
+            if self.policy in self.exception:
                 self.obs = self.to_tensor_dict(self.obs)
             else:
                 self.obs = self.to_tensor(self.obs).to(self.device)
@@ -148,7 +153,7 @@ class Trainer:
         
         advantages = self.GAE(values, rewards, dones)
 
-        if self.policy == "MultiInputPolicy":
+        if self.policy in self.exception:
             observations = {key: observations[key].reshape(self.batch_size, *observations[key].shape[2:]) for key in observations}
         else: 
             observations = observations.reshape(self.batch_size, *observations.shape[2:])
@@ -175,7 +180,7 @@ class Trainer:
             for start in range(0, self.batch_size, self.mini_batch_size):
                 end = start + self.mini_batch_size
                 mini_batch_idx = idx[start:end]
-                if self.policy == "MultiInputPolicy":
+                if self.policy in self.exception:
                     mini_batch_samples = {
                         k: (
                             {key: v[key][mini_batch_idx].to(self.device) for key in v} if k == "observations" else v[mini_batch_idx].to(self.device)
@@ -302,7 +307,7 @@ class Trainer:
         """
         Main training loop.
         """
-        for e in tqdm(range(self.update)):
+        for e in tqdm(range(1,self.update+1)):
             if self.anneal_lr:
                 coeff = 1 - (e/self.update)
                 self.optimizer.param_groups[0]["lr"] = coeff * self.lr
@@ -341,14 +346,14 @@ class Trainer:
         Returns:
             tuple: Mean and standard deviation of rewards over the episodes.
         """
-        env = make_env(data_path="../dataset/data_test.pickle") if self.policy == "MultiInputPolicy" else make_env()
+        env = make_env(data_path="./dataset/data_test.pickle") if self.policy in self.exception else make_env()
         rewards = [0]*n_eval_episodes
         for n in range(n_eval_episodes):
             observation,_ = env.reset()
             done = False
             while not done:
-                if self.policy == "MultiInputPolicy":
-                    obs = self.to_tensor_dict(observation)
+                if self.policy in self.exception:
+                    obs = self.to_tensor_dict(observation, test=True)
                 else:
                     obs = self.to_tensor(observation).reshape(1,-1).to(self.device)
                 action_distribution, _ = self.model(obs)

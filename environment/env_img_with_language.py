@@ -21,7 +21,7 @@ class LanguageImgGridWorldEnv(gym.Env):
 
     Observation Space:
         {
-            "grid_coordinates": Agent's (row, column) position.
+            "grid": Agent's (row, column) position.
             "bert_embeddings": BERT embedding of the goal text.
         }
 
@@ -43,7 +43,7 @@ class LanguageImgGridWorldEnv(gym.Env):
 
         # Define the observation space
         self.observation_space = gym.spaces.Dict({
-            "grid_coordinates": gym.spaces.Box(low=0, high=grid_size - 1, shape=(2,), dtype=np.int32),
+            "grid": gym.spaces.Box(low=0, high=1, shape=(3, 10, 10), dtype=np.float32),
             "bert_embeddings": gym.spaces.Box(low=-1.0, high=1.0, shape=(embedding_dim,), dtype=np.float32),
         })
 
@@ -65,8 +65,8 @@ class LanguageImgGridWorldEnv(gym.Env):
 
 
     def _get_obs(self):
-        grid = np.ones((self.grid_size, self.grid_size, 3))
-        grid[self.agent_pos[0], self.agent_pos[1], :] = np.array(self._agent_color)/255
+        grid = np.ones((3,self.grid_size, self.grid_size))
+        grid[:, self.agent_pos[0], self.agent_pos[1]] = np.array(self._agent_color)/255
         return {
         "grid": grid,
         "bert_embeddings": self.goal_emb,
@@ -76,9 +76,9 @@ class LanguageImgGridWorldEnv(gym.Env):
         super().reset(seed=seed)
         self.nb_steps = 0
         self.start_pos = self._random_pos()
-        self.goal_pos = random.choice([(self.grid_size-1, self.grid_size-1), (0, self.grid_size-1), (self.grid_size-1, 0)])
+        self.goal_pos = random.choice([(self.grid_size-1, self.grid_size-1), (0, self.grid_size-1), (self.grid_size-1, 0), (0,0)])
         self.text_goal = random.choice(list(self.data[(self.data["row"] == self.goal_pos[0]) & (self.data["column"] == self.goal_pos[1])]["prompt"]))
-        self.goal_emb = self.embedder(self.text_goal).cpu().numpy()
+        self.goal_emb = np.squeeze(self.embedder(self.text_goal).cpu().numpy())
 
         self.agent_pos = self.start_pos
 

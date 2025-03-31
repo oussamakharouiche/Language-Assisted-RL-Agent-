@@ -1,11 +1,11 @@
-exp_name: "Language_pos_seq_classif"
-model_name: "Language_pos_seq_classif"
-type: "language_seq_classif"
+exp_name: "multi_head_attention"
+model_name: "multi_head_attention"
+type: "language_seq_classif_attention"
 embedding_type: "seq_classif_bert"
-share: false
+share: true
 seed: 40
 cuda: true
-total_timestamp: 500000
+total_timestamp: 750000
 learning_rate: 0.00025
 num_steps: 64
 n_envs: 32
@@ -17,4 +17,4 @@ n_epochs: 4
 ent_coeff: 0.0
 vf_coeff: 0.5
 anneal_lr: true
-policy: "MultiInputPolicy"
+policy: "MultiInputMultiHeadAttentionPolicy"
