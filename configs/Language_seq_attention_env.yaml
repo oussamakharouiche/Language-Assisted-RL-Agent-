@@ -1,5 +1,5 @@
-exp_name: "my_PPO_SeqLanguageGridWorld_10x10_attention"
-model_name: "my_PPO_LanguageGridWorld_10x10_seq_classif_bert_attention"
+exp_name: "grid_env_bert_seq_classif_attention"
+model_name: "grid_env_bert_seq_classif_attention"
 type: "language_seq_classif_attention"
 embedding_type: "seq_classif_bert"
 share: true

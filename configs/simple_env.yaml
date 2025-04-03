@@ -1,5 +1,5 @@
-exp_name: "runtime_test"
-model_name: "my_PPO_GridWorld_10x10"
+exp_name: "grid_env"
+model_name: "grid_env"
 type: "simple"
 embedding_type: "None"
 share: false

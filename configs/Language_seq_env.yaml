@@ -1,5 +1,5 @@
-exp_name: "Language_pos_seq_classif"
-model_name: "Language_pos_seq_classif"
+exp_name: "grid_env_bert_seq_classif"
+model_name: "grid_env_bert_seq_classif"
 type: "language_seq_classif"
 embedding_type: "seq_classif_bert"
 share: false
