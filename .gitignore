@@ -1,3 +1,6 @@
 __pycache__
 .env
 logs
+embedddings/constrastive_learning.ipynb
+dataset
+embedddings/constrastive_learning.ipynb
