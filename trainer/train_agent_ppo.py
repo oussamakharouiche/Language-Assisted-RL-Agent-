@@ -19,6 +19,9 @@ def make_language_env(data_path="./dataset/data.pickle"):
 def make_language_seq_env(data_path="./dataset/data.pickle"):
     return LanguageGridWorldEnv(embed_text_seq_classification, EMBED_TEXT_SEQ_CLASSIFICATION_DIM, data_path=data_path)
 
+def make_language_contrastive_env(data_path="./dataset/data.pickle"):
+    return LanguageGridWorldEnv(embed_text_contrastive_learning, EMBED_TEXT_CONTRASTIVE_LEARNING_DIM, data_path=data_path)
+
 def make_language_seq_env_attention(data_path="./dataset/data.pickle"):
     return LanguageImgGridWorldEnv(embed_text_seq_classification, EMBED_TEXT_SEQ_CLASSIFICATION_DIM, data_path=data_path)
 
@@ -26,6 +29,7 @@ make_environment = {
     "simple": make_env,
     "language": make_language_env,
     "language_seq_classif": make_language_seq_env,
+    "language_contrastive_learning": make_language_contrastive_env,
     "language_seq_classif_attention": make_language_seq_env_attention,
 }
 
