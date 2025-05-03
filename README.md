@@ -57,7 +57,7 @@ We base our agent on **Proximal Policy Optimization** (PPO).
 The clipped surrogate objective is  
 
 $$
-L_\text{clip}(θ)=\hat{\mathbb{E}}_t\Big[\min\big(r_t(θ)\hat{A}_t,\;\mathrm{clip}(r_t(θ),1\!-\!ε,1\!+\!ε)\hat{A}_t\big)\Big],
+L_\text{clip}(θ)=\hat{\mathbb{E}}_t\Big[\min\big(r_t(θ)\hat{A}_t,\;\mathrm{clip}(r_t(θ),1-\epsilon,1+\epsilon)\hat{A}_t\big)\Big],
 $$
 
 with $r_t=\frac{π_θ}{π_{θ_\text{old}}}$.  
