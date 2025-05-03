@@ -91,11 +91,11 @@ with $r_t=\frac{π_θ}{π_{θ_\text{old}}}$.
 
 | Setting                             | Steps → Opt. | Avg. Reward | Figure |
 |-------------------------------------|-------------:|------------:|:------:|
-| **No language (coords only)**       | 4 k | **51** | <img src="assets/images/without_text.png" alt="Project banner" width="35%"/> |
-| Raw BERT embeddings                 | — | <br>poor | <img src="assets/images/raw_bert.png" alt="Project banner" width="35%"/> |
-| BERT + Contrastive Learning         | 8 k | ~50 | <img src="assets/images/contrastive_learning.png" alt="Project banner" width="35%"/> |
-| BERT + Sequence Classification ★    | **4 k** | **51** | <img src="assets/images/sequence_classification.png" alt="Project banner" width="35%"/> |
-| Fine‑tuned BERT + Grid Attention    | 10 k | 51 | <img src="assets/images/cross_attention.png" alt="Project banner" width="35%"/> |
+| **No language (coords only)**       | 4 k | **51** | <img src="assets/images/without_text.png" alt="Project banner" width="45%"/> |
+| Raw BERT embeddings                 | — | <br>poor | <img src="assets/images/raw_bert.png" alt="Project banner" width="45%"/> |
+| BERT + Contrastive Learning         | 8 k | ~50 | <img src="assets/images/contrastive_learning.png" alt="Project banner" width="45%"/> |
+| BERT + Sequence Classification ★    | **4 k** | **51** | <img src="assets/images/sequence_classification.png" alt="Project banner" width="45%"/> |
+| Fine‑tuned BERT + Grid Attention    | 10 k | 51 | <img src="assets/images/cross_attention.png" alt="Project banner" width="45%"/> |
 
 _Key takeaway_: fine‑tuned text embeddings using sequence classification let the agent hit optimal performance using only natural‑language commands.
 
